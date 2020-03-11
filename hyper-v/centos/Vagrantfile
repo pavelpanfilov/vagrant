@@ -1,5 +1,11 @@
 # -*- mode: ruby -*-
 
+nodes = {
+  "centos1" => "10.0.0.50",
+  "centos2" => "10.0.0.51",
+  "centos3" => "10.0.0.52"
+}
+
 Vagrant.configure("2") do |config|
   config.vm.box = "centos/7"
   config.vm.network "public_network", bridge: "LAN"
@@ -9,18 +15,12 @@ Vagrant.configure("2") do |config|
   SHELL
   config.vm.provision :shell, path: "bootstrap.sh"
 
-  config.vm.define :centos1 do |centos1|
-    centos1.vm.provision :shell, :path => "set-ip.sh", :args => "10.0.0.50"
-    centos1.vm.provision :reload
-  end
-
-  config.vm.define :centos2 do |centos2|
-    centos2.vm.provision :shell, :path => "set-ip.sh", :args => "10.0.0.51"
-    centos2.vm.provision :reload
-  end
-
-  config.vm.define :centos3 do |centos3|
-    centos3.vm.provision :shell, :path => "set-ip.sh", :args => "10.0.0.52"
-    centos3.vm.provision :reload
+  nodes.each do |name, ip|
+    config.vm.define name do |machine|
+      machine.vm.hostname = name
+      machine.vm.provision :shell, :path => "set-ip.sh", :args => ip
+      machine.vm.provision :reload
+      machine.vm.provision :hostmanager
+    end
   end
 end
